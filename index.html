@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>門診表產生器 - 萬用相容版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>門診表產生器 - 結構緩衝優化版</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -12,17 +12,13 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --font-main: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { font-family: var(--font-main); }
+        body { font-family: 'Noto Sans TC', sans-serif; }
         .poster-content * { 
             letter-spacing: 0px !important; 
             line-height: 1.2 !important; 
             box-sizing: border-box !important;
-            text-rendering: optimizeLegibility;
-            -webkit-font-smoothing: antialiased;
         }
-        /* 核心校正：強制所有格子內容使用 Flex 置中，無視瀏覽器差異 */
-        .flex-center { display: flex; align-items: center; justify-content: center; text-align: center; }
+        /* 優化 iPad 的滾動 */
         .overflow-y-auto { -webkit-overflow-scrolling: touch; }
     </style>
 </head>
@@ -84,49 +80,48 @@
         const PosterContent = forwardRef(({ data, isForCapture }, ref) => (
             <main 
                 ref={ref}
-                className="poster-engine"
                 style={{
-                    width: '1080px', height: '1920px', padding: '50px 60px',
+                    width: '1080px', height: '1920px', padding: '60px 80px',
                     background: '#f8fafc', display: 'flex', flexDirection: 'column',
                     boxSizing: 'border-box', borderRadius: isForCapture ? '0' : '24px',
                     boxShadow: isForCapture ? 'none' : '0 20px 60px rgba(0,0,0,0.15)',
                     position: isForCapture ? 'absolute' : 'relative',
                     left: isForCapture ? '-9999px' : '0', top: isForCapture ? '-9999px' : '0',
-                    gap: '30px'
+                    gap: '40px'
                 }}
             >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '35px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                     {data.clinics.map((clinic, cIdx) => (
                         <section key={cIdx} style={{ 
-                            background: '#ffffff', borderRadius: '40px', padding: '30px 30px',
+                            background: '#ffffff', borderRadius: '50px', padding: '40px 40px',
                             boxShadow: '0 8px 30px rgba(0,0,0,0.03)', border: '1px solid #edf2f7',
-                            display: 'flex', flexDirection: 'column', gap: '15px'
+                            display: 'flex', flexDirection: 'column', gap: '20px'
                         }}>
-                            <div className="flex-center" style={{ gap: '20px', marginBottom: '10px' }}>
-                                <span style={{ fontSize: '36px', fontWeight: 700, color: '#4a5568' }}>{data.title}</span>
-                                <span style={{ fontSize: '48px', fontWeight: 800, color: clinic.theme === 'teal' ? '#2c7a7b' : '#2b6cb0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+                                <span style={{ fontSize: '38px', fontWeight: 700, color: '#4a5568' }}>{data.title}</span>
+                                <span style={{ fontSize: '50px', fontWeight: 800, color: clinic.theme === 'teal' ? '#2c7a7b' : '#2b6cb0' }}>
                                     {clinic.name}
                                 </span>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-                                {/* 表頭 */}
-                                <div style={{ height: '60px' }}></div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
+                                <div style={{ height: '70px' }}></div>
                                 {DAYS.map(d => (
-                                    <div key={d} className="flex-center" style={{ 
+                                    <div key={d} style={{ 
                                         background: clinic.theme === 'teal' ? '#5f8cb3' : '#e07a7a', 
-                                        color: 'white', borderRadius: '18px', height: '60px',
-                                        fontSize: '28px', fontWeight: 800
+                                        color: 'white', borderRadius: '20px', height: '70px',
+                                        fontSize: '28px', fontWeight: 800, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
                                     }}>
-                                        {d.replace('週', '')}
+                                        <span style={{ transform: 'translateY(2px)' }}>{d.replace('週', '')}</span>
+                                        {/* 物理性空白層：控制在 8px */}
+                                        <div style={{ height: '8px' }}></div>
                                     </div>
                                 ))}
 
-                                {/* 班表內容 */}
                                 {SLOTS.map(s => (
                                     <React.Fragment key={s.key}>
-                                        <div className="flex-center" style={{ height: '110px', flexDirection: 'column' }}>
-                                            <div className="flex-center" style={{ background: '#e9d8a6', width: '64px', height: '64px', borderRadius: '50%', fontSize: '24px', fontWeight: 800, color: '#5d4037' }}>
+                                        <div style={{ height: '110px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                            <div style={{ background: '#e9d8a6', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 800, color: '#5d4037' }}>
                                                 {s.label.split('\n')[0]}
                                             </div>
                                             <div style={{ fontSize: '16px', fontWeight: 700, color: '#64748b', marginTop: '6px' }}>{s.label.split('\n')[1]}</div>
@@ -135,12 +130,13 @@
                                             const doc = clinic.schedule[d]?.[s.key] || "●";
                                             const color = DOCTOR_COLORS[doc] || DOCTOR_COLORS["預設"];
                                             return (
-                                                <div key={d} className="flex-center" style={{ 
-                                                    border: '2.5px solid #334155', borderRadius: '25px', 
-                                                    height: '110px', fontSize: '32px', fontWeight: 800, 
-                                                    color: doc === "●" || doc === "休" ? "#cbd5e1" : color
+                                                <div key={d} style={{ 
+                                                    border: '3px solid #334155', borderRadius: '25px', 
+                                                    height: '110px', display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                 }}>
-                                                    <span style={{ transform: 'translateY(-2px)' }}>{doc}</span>
+                                                    <div style={{ fontSize: '32px', fontWeight: 800, color: doc === "●" || doc === "休" ? "#cbd5e1" : color, transform: 'translateY(-1px)' }}>
+                                                        {doc}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
@@ -148,13 +144,14 @@
                                 ))}
                             </div>
 
+                            {/* 門診異動區塊：優化頂部高度與間距 */}
                             {clinic.changes && clinic.changes.length > 0 && (
                                 <div style={{ 
-                                    background: '#f1f5f9', borderRadius: '24px', padding: '20px 35px', 
-                                    borderLeft: `12px solid ${clinic.theme === 'teal' ? '#2c7a7b' : '#2b6cb0'}`,
-                                    marginLeft: '10px' 
+                                    background: '#f1f5f9', borderRadius: '28px', padding: '12px 40px 25px 40px', 
+                                    borderLeft: `14px solid ${clinic.theme === 'teal' ? '#2c7a7b' : '#2b6cb0'}`,
+                                    marginTop: '5px'
                                 }}>
-                                    <div className="flex-center" style={{ justifyContent: 'flex-start', fontSize: '24px', fontWeight: 800, color: '#334155', marginBottom: '10px', gap: '10px' }}>
+                                    <div style={{ fontSize: '26px', fontWeight: 800, color: '#334155', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                                         <span style={{ color: '#f59e0b' }}>🔺</span> 門診異動
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -171,15 +168,15 @@
                     ))}
                 </div>
 
-                <footer style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '25px' }}>
-                    <div className="flex-center" style={{ padding: '20px 30px', background: '#e2e8f0', borderRadius: '35px', width: '100%' }}>
-                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#334155', lineHeight: 1.5 }}>{data.note}</div>
+                <footer style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '30px', paddingBottom: '20px' }}>
+                    <div style={{ padding: '25px 40px', background: '#e2e8f0', borderRadius: '40px', width: '100%' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#334155', textAlign: 'center', lineHeight: 1.6 }}>{data.note}</div>
                     </div>
-                    <div className="flex-center" style={{ flexDirection: 'column', paddingBottom: '30px' }}>
-                        <div style={{ fontSize: '34px', fontWeight: 800, color: '#1a365d', letterSpacing: '1px' }}>
-                            晉安 / 毅安 <span style={{ fontWeight: 400, color: '#4a5568', marginLeft: '8px' }}>|</span> <span style={{ color: '#2c7a7b', fontSize: '30px' }}>專業復健體系</span>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '38px', fontWeight: 800, color: '#1a365d', letterSpacing: '2px' }}>
+                            晉安 / 毅安 <span style={{ fontWeight: 400, color: '#4a5568', margin: '0 10px' }}>|</span> <span style={{ color: '#2c7a7b', fontSize: '34px' }}>專業復健體系</span>
                         </div>
-                        <div style={{ fontSize: '18px', fontWeight: 700, color: '#94a3b8', marginTop: '6px' }}>Tainan Rehab Medical Group</div>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#94a3b8', marginTop: '8px' }}>Tainan Rehab Medical Group</div>
                     </div>
                 </footer>
             </main>
@@ -204,13 +201,7 @@
                 setTimeout(async () => {
                     try {
                         const canvas = await html2canvas(captureRef.current, {
-                            scale: 2, 
-                            useCORS: true, 
-                            backgroundColor: "#f8fafc", 
-                            width: 1080, 
-                            height: 1920,
-                            windowWidth: 1080, // 強制模擬器寬度
-                            windowHeight: 1920 // 強制模擬器高度
+                            scale: 2, useCORS: true, backgroundColor: "#f8fafc", width: 1080, height: 1920
                         });
                         const link = document.createElement('a');
                         link.download = `${data.title.replace('/', '-')}_醫師門診表.png`;
@@ -225,25 +216,25 @@
             };
 
             return (
-                <div className="flex flex-col lg:flex-row min-h-screen bg-slate-100">
+                <div className="flex flex-col lg:flex-row min-h-screen bg-slate-100 text-slate-900">
                     <PosterContent ref={captureRef} data={data} isForCapture={true} />
                     
-                    <div className="w-full lg:w-[450px] p-6 bg-white shadow-2xl overflow-y-auto max-h-screen border-r z-10">
+                    <div className="w-full lg:w-[450px] p-6 bg-white shadow-2xl overflow-y-auto max-h-screen border-r z-10 text-slate-800">
                         <header className="mb-6 pb-4 border-b">
                             <h1 className="text-2xl font-black text-teal-600 flex items-center gap-2">
-                                <i data-lucide="edit-3"></i> 門診表萬用編輯器
+                                <i data-lucide="edit-3"></i> 門診表智慧編輯
                             </h1>
                         </header>
 
-                        <div className="space-y-6 text-slate-800">
+                        <div className="space-y-6">
                             <section>
                                 <label className="block text-sm font-black text-slate-500 mb-1">年份月份</label>
-                                <input className="w-full p-2 border-2 border-slate-200 rounded-lg font-bold bg-slate-50" value={data.title} onChange={(e) => setData({...data, title: e.target.value})} />
+                                <input className="w-full p-2 border-2 border-slate-200 rounded-lg font-bold bg-slate-50 outline-none" value={data.title} onChange={(e) => setData({...data, title: e.target.value})} />
                             </section>
 
                             {data.clinics.map((clinic, cIdx) => (
                                 <section key={cIdx} className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 space-y-4">
-                                    <div className="font-bold text-lg border-b pb-1">{cIdx === 0 ? "晉安院區" : "毅安院區"}</div>
+                                    <div className="font-bold text-lg border-b pb-1 text-slate-700">{cIdx === 0 ? "晉安院區" : "毅安院區"}</div>
                                     <div className="grid grid-cols-7 gap-1">
                                         <div className="text-[10px] text-center font-bold text-slate-400">時段</div>
                                         {DAYS.map(d => <div key={d} className="text-[10px] text-center font-bold text-slate-400">{d}</div>)}
@@ -251,19 +242,21 @@
                                             <React.Fragment key={s.key}>
                                                 <div className="text-[10px] flex items-center justify-center bg-slate-200 rounded py-1">{s.key.charAt(0)}</div>
                                                 {DAYS.map(d => (
-                                                    <input key={d} className="w-full p-1 text-center border rounded text-[12px] bg-white" value={clinic.schedule[d]?.[s.key] || "●"} onChange={(e) => updateClinicSchedule(cIdx, d, s.key, e.target.value)} />
+                                                    <input key={d} className="w-full p-1 text-center border rounded text-[12px] bg-white outline-none" value={clinic.schedule[d]?.[s.key] || "●"} onChange={(e) => updateClinicSchedule(cIdx, d, s.key, e.target.value)} />
                                                 ))}
                                             </React.Fragment>
                                         ))}
                                     </div>
+                                    
                                     <div className="border-t pt-3">
-                                        <div className="flex justify-between items-center mb-2 text-sm font-black text-slate-600">
+                                        <div className="flex justify-between items-center mb-2 text-sm font-black">
                                             <span>門診異動</span>
                                             <button onClick={() => { const n = {...data}; n.clinics[cIdx].changes.push(""); setData(n); }} className="p-1 bg-teal-600 text-white rounded"><i data-lucide="plus" className="w-4 h-4"></i></button>
                                         </div>
+                                        {/* 已有異動清單 */}
                                         {clinic.changes.map((item, idx) => (
                                             <div key={idx} className="flex gap-2 mb-2">
-                                                <input className="flex-1 p-2 border rounded-lg text-xs bg-white" value={item} onChange={(e) => {
+                                                <input className="flex-1 p-2 border rounded-lg text-xs bg-white outline-none" value={item} onChange={(e) => {
                                                     const n = JSON.parse(JSON.stringify(data));
                                                     n.clinics[cIdx].changes[idx] = e.target.value;
                                                     setData(n);
@@ -271,23 +264,47 @@
                                                 <button onClick={() => { const n = JSON.parse(JSON.stringify(data)); n.clinics[cIdx].changes.splice(idx,1); setData(n); }} className="text-rose-500 hover:bg-rose-50 p-1 rounded"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
                                             </div>
                                         ))}
+                                        {/* 永遠顯示最後一行空白輸入框 */}
+                                        <div className="flex gap-2 mb-2 opacity-60">
+                                            <input 
+                                                className="flex-1 p-2 border border-dashed rounded-lg text-xs bg-white outline-none focus:border-solid focus:opacity-100 transition-all" 
+                                                placeholder="在此輸入新增異動..."
+                                                onBlur={(e) => {
+                                                    if(e.target.value.trim() !== "") {
+                                                        const n = JSON.parse(JSON.stringify(data));
+                                                        n.clinics[cIdx].changes.push(e.target.value);
+                                                        setData(n);
+                                                        e.target.value = ""; 
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if(e.key === 'Enter' && e.target.value.trim() !== "") {
+                                                        const n = JSON.parse(JSON.stringify(data));
+                                                        n.clinics[cIdx].changes.push(e.target.value);
+                                                        setData(n);
+                                                        e.target.value = "";
+                                                    }
+                                                }}
+                                            />
+                                            <div className="w-6"></div>
+                                        </div>
                                     </div>
                                 </section>
                             ))}
 
                             <section>
                                 <label className="block text-sm font-black text-slate-500 mb-1">底部備註</label>
-                                <textarea className="w-full p-2 border-2 border-slate-200 rounded-lg text-sm h-20 bg-slate-50" value={data.note} onChange={(e) => setData({...data, note: e.target.value})} />
+                                <textarea className="w-full p-2 border-2 border-slate-200 rounded-lg text-sm h-20 bg-slate-50 outline-none" value={data.note} onChange={(e) => setData({...data, note: e.target.value})} />
                             </section>
 
-                            <button onClick={handleDownload} disabled={isCapturing} className={`w-full py-4 rounded-2xl font-black text-white flex items-center justify-center gap-2 shadow-lg ${isCapturing ? 'bg-slate-400' : 'bg-teal-600 active:scale-95'}`}>
-                                <i data-lucide="download"></i> {isCapturing ? '產圖中...' : '下載高清 PNG 海報'}
+                            <button onClick={handleDownload} disabled={isCapturing} className={`w-full py-4 rounded-2xl font-black text-white flex items-center justify-center gap-2 shadow-lg transition-all ${isCapturing ? 'bg-slate-400' : 'bg-teal-600 active:scale-95'}`}>
+                                <i data-lucide="download"></i> {isCapturing ? '正在產生圖片...' : '下載高清 PNG 海報'}
                             </button>
                         </div>
                     </div>
 
                     <div className="flex-1 flex justify-center items-start p-6 overflow-auto bg-slate-300">
-                        <div className="scale-[0.2] md:scale-[0.35] lg:scale-[0.3] xl:scale-[0.4] origin-top my-4 shadow-2xl">
+                        <div className="scale-[0.25] md:scale-[0.35] lg:scale-[0.3] xl:scale-[0.4] origin-top my-4 shadow-2xl">
                             <PosterContent data={data} isForCapture={false} />
                         </div>
                     </div>
